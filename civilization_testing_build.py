@@ -3,14 +3,17 @@ import os
 import sys
 from tkinter import messagebox
 
-# To Do List 25/1/19
+# To Do List 26/1/19
+# Write comments
+
 
 class Game:
     def __init__(self):
-        self.civ_name = ''
-        self.civ_species = ''
-        self.year = 0000
-        self.country = ''
+        self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
+        self.civ_species = ''  # Holds the name of species
+        self.minimum_year = 1432  # self.year cannot be lower than this
+        self.year = 0000  # Variable for what year the player is in.
+        self.country = ''  # Country where civilization is based in
         self.main_window = tk.Tk()
         self.main_window.title('Game Options')
         self.main_window.resizable(width=False, height=False)
@@ -21,7 +24,7 @@ class Game:
         self.quit_game = tk.Button(text='Quit')
         self.quit_game.grid(row=2)
 
-    def new_game_window(self):
+    def new_game_window(self):  # Displays the window for creating a new game
         self.main_window.withdraw()
         new_game_window = tk.Toplevel()
         new_game_window.resizable(width=False, height=False)
@@ -48,7 +51,7 @@ class Game:
                                                                                           starting_year_entry.get()))
         create_civilization_button.grid(row=4, column=1)
 
-    def choose_country(self, parent_window):
+    def choose_country(self, parent_window):  # Makes a new window and displays countries to choose from.
         parent_window.withdraw()
         country_window = tk.Toplevel()
         country_window.title('Choose Country')
@@ -69,43 +72,49 @@ class Game:
                                                                               country_window))
         europe_country_choice.grid(row=3)
 
-    def assign_country(self, country, parent_window, child_window):
+    def assign_country(self, country, parent_window, child_window):  # Changes self.country to player's choice.
         self.country = country
         messagebox.showinfo('Country chosen!', 'Your civilization will be living in {}!'.format(country))
         self.back(child_window, parent_window)
 
-    def create_civilization(self, civ_name, civ_species_name, starting_year):
+    def create_civilization(self, civ_name, civ_species_name, starting_year):  # Creates civilization
         if civ_name == '' or civ_species_name == '' or starting_year == '' or self.country == '':
+            # Checks if the user has filled out all the requirements.
             messagebox.showerror('Fill out all fields!', 'Please fill out all fields!')
         else:
             self.civ_name = civ_name
             self.civ_species = civ_species_name
-            if starting_year.isnumeric():
-                self.year = starting_year
-                print(self.civ_name)
-                print(self.civ_species)
-                print(self.year)
-                print(self.country)
+            if starting_year.isnumeric():  # Checks if the year that the user has entered is a numeric value
+                if starting_year < self.minimum_year:
+                    messagebox.showerror('Too low!', 'The year you entered is too low!')
+                else:
+                    self.year = starting_year
+                    print(self.civ_name)
+                    print(self.civ_species)
+                    print(self.year)
+                    print(self.country)
+                    messagebox.showinfo('Civilization made!', 'Your civilization has been made!')
             else:
                 messagebox.showerror('Invalid format!', 'Please choose a valid year!')
 
-
-    def back(self, window_to_close, window_to_open):
+    def back(self, window_to_close, window_to_open):  # Returns the player to the previous window.
         window_to_close.destroy()
         window_to_open.deiconify()
 
-    def load_game(self):
+    def load_game(self):  # Reads from a file called ".playernamexample> in .saves and loads the player's progress.
         pass
 
-    def quit(self):
+    def quit(self):  # Destroys the main root window and closes the program.
         self.main_window.destroy()
         sys.exit()
 
     @staticmethod
-    def check_for_save_folder(self):
+    def check_for_save_folder():  # Checks if '.saves' is in the current directory.
+        # '.saves' is the directory where the player's progress is stored!
         if '.saves' in os.listdir():
             pass
         else:
             os.mkdir('.saves')
+
 
 game_instance = Game()
