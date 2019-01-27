@@ -4,6 +4,7 @@ import sys
 from tkinter import messagebox
 import threading
 from time import sleep
+import random
 
 
 # To Do List 26/1/19
@@ -14,6 +15,7 @@ class Game:
         self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
         self.civ_species = ''  # Holds the name of species
         self.wood_increment_amt = 100
+        self.houses = []
         self.wood_amt = 0
         self.stone_amt = 0
         self.current_population = 0
@@ -46,6 +48,7 @@ class Game:
             # self.advertising_level+1)
         harvest_wood_desc = 'Harvest Wood - Takes 2 hours - Gives 100 wood!'
         sell_wood_desc = 'Sell Wood - 2 dollars per wood piece!'
+        start_advertising_desc = 'Start Advertising - Attracts more people to your town! - Costs 600 dollars!'
         build_single_house_desc = 'Build a single small home that holds 1 person! Costs {} wood'.format(
             self.single_house_amt)
         build_medium_house_desc = 'Build a medium home that holds up to 4 people! Costs {} wood'.format(
@@ -53,15 +56,41 @@ class Game:
         harvest_wood_button = tk.Button(window, text=harvest_wood_desc,
                                         command=lambda: self.add_wood(self.wood_increment_amt,  wood_label_var))
         harvest_wood_button.grid(row=3)
-        sell_wood_button = tk.Button(window, text=sell_wood_desc, command=lambda: self.sell_wood(money_label_var,
-                                                                                                 wood_label_var))
+        sell_wood_button = tk.Button(window, text=sell_wood_desc, command=lambda: self.sell_wood(wood_label_var,
+                                                                                                 money_label_var))
         sell_wood_button.grid(row=4)
         build_single_house_desc = tk.Button(window, text=build_single_house_desc)
         build_single_house_desc.grid(row=5)
         build_medium_house_desc = tk.Button(window, text=build_medium_house_desc)
         build_medium_house_desc.grid(row=6)
+        upgrade_advertising_button = tk.Button(window, text=start_advertising_desc,
+                                               command=lambda: self.advertising_start(600))
+        upgrade_advertising_button.grid(row=7)
+
+    def advertising_start(self, amount_needed_to_upgrade):  # Creates a new thread and runs it.
+        if self.money_amt >= amount_needed_to_upgrade:
+            self.money_amt -= amount_needed_to_upgrade
+            self.advertising_level += 1
+            start_advertising_thread = threading.Thread(target=self.population_increment)
+            start_advertising_thread.start()
+        else:
+            messagebox.showerror('Not enough money!', 'You do not have enough money! '
+                                                      'You need {} dollars'.format(amount_needed_to_upgrade))
+
+    def population_increment(self):
+        '''
+        This is the "advertising" upgrade. All this does it increment self.population by a random amount every few
+        seconds. Then another function is going to check if all those new people can get homes, if so. It adds
+        +1 to the self.population variable.
+        '''
+
+        while True:
+            if self.advertising_level == 1:
+                number_of_new_people = random.randint(1, 20)
+                print(number_of_new_people)
 
     def sell_wood(self, wood_amt_display, money_amt_display):
+        # This functions sells all the wood the player has in their inventory
         total_money_gained = 0
         for x in range(0, self.wood_amt):
             total_money_gained += 2
@@ -73,7 +102,8 @@ class Game:
             total_money_gained))
 
     def add_wood(self, wood_amt, wood_label_var):
-        messagebox.showinfo('Working...', 'You go out and harvest wood...')
+        # This function adds a specified wood amount to the player's total wood.
+        messagebox.showinfo('Working...', 'You go out and harvest wood.')
         sleep(2)
         self.wood_amt += wood_amt
         print(self.wood_amt)
@@ -112,11 +142,11 @@ class Game:
                                    command=lambda: self.choose_country(new_game_window))
         choose_country.grid(row=3, column=1)
         create_civilization_button = tk.Button(new_game_window, text='Create',
-                                               command = lambda: self.create_civilization(civ_name_entry.get(),
-                                                                                          species_name_entry.get(),
-                                                                                          starting_year_entry.get(),
-                                                                                          parent_window,
-                                                                                          new_game_window))
+                                               command=lambda: self.create_civilization(civ_name_entry.get(),
+                                                                                        species_name_entry.get(),
+                                                                                        starting_year_entry.get(),
+                                                                                        parent_window,
+                                                                                        new_game_window))
         create_civilization_button.grid(row=4, column=1)
         cancel_button = tk.Button(new_game_window, text='Cancel', command=lambda: self.back(new_game_window,
                                                                                             parent_window))
@@ -177,7 +207,8 @@ class Game:
             else:
                 messagebox.showerror('Invalid format!', 'Please choose a valid year!')
 
-    def back(self, window_to_close, window_to_open):  # Returns the player to the previous window.
+    @staticmethod
+    def back(window_to_close, window_to_open):  # Returns the player to the previous window.
         window_to_close.destroy()
         window_to_open.deiconify()
 
@@ -195,6 +226,19 @@ class Game:
             pass
         else:
             os.mkdir('.saves')
+
+
+class SingleHouse:
+    def __init__(self, inhabitant_amount): # Inhabitant amount should return a
+        self.inhabitant_amount = inhabitant_amount
+        self.occupants = []
+
+    def get_inhabitant_amount(self):
+        return self.inhabitant_amount
+
+    def add_occupant(self, occupant_name):
+        self.occupants.append(occupant_name)
+        return self.occupants
 
 
 game_instance = Game()
