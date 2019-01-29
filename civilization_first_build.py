@@ -7,15 +7,14 @@ from time import sleep
 import random
 
 
-# To Do List 26/1/19
-
-
 class Game:
     def __init__(self):
         self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
         self.civ_species = ''  # Holds the name of species
         self.wood_increment_amt = 100
-        self.houses = []
+        house1 = SingleHouse(1)
+        self.houses = [house1]
+        self.occupant_names = [] 
         self.wood_amt = 0
         self.stone_amt = 0
         self.current_population = 0
@@ -29,9 +28,16 @@ class Game:
         self.country = ''  # Country where civilization is based in
         self.starting_window()
 
+    def get_occupant_names(self):
+        with open('.names', 'r') as doc:
+            content = doc.readlines()
+        for name in content:
+            self.occupant_names.append(name)
+
     def main_game(self, root_window):
         root_window.withdraw()
         main_window = tk.Toplevel()
+        self.get_occupant_names()
         main_window.title('Civilization Menu')
         main_window.resizable(width=False, height=False)
         main_window.protocol("WM_DELETE_WINDOW", lambda: self.quit(root_window))
@@ -76,7 +82,6 @@ class Game:
         else:
             messagebox.showerror('Not enough money!', 'You do not have enough money! '
                                                       'You need {} dollars'.format(amount_needed_to_upgrade))
-
     def population_increment(self):
         '''
         This is the "advertising" upgrade. All this does it increment self.population by a random amount every few
@@ -88,6 +93,17 @@ class Game:
             if self.advertising_level == 1:
                 number_of_new_people = random.randint(1, 20)
                 print(number_of_new_people)
+                for item in self.houses:
+                    occupant_names = item.return_occupant_names()
+                    print(occupant_names)
+                    occupant_amount = item.inhabitant_amount
+                    number_of_new_people -= occupant_amount
+                    house_value = item.check_if_residence_is_full()
+                    if house_value is True:
+                        item.add_occupant(random.choice(self.occupant_names))
+                    else:
+                        print('House full!')
+                    
 
     def sell_wood(self, wood_amt_display, money_amt_display):
         # This functions sells all the wood the player has in their inventory
@@ -231,7 +247,19 @@ class Game:
 class SingleHouse:
     def __init__(self, inhabitant_amount): # Inhabitant amount should return a
         self.inhabitant_amount = inhabitant_amount
+        self.full_house = False 
         self.occupants = []
+
+    def check_if_residence_is_full(self):
+        if len(self.occupants) == self.inhabitant_amount:
+            self.full_house = True
+            return False 
+        else:
+            self.full_house = False
+            return True 
+    
+    def return_occupant_names(self):
+        return self.occupants
 
     def get_inhabitant_amount(self):
         return self.inhabitant_amount
