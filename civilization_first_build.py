@@ -7,13 +7,20 @@ from time import sleep
 import random
 
 
+#TODO LIST 4/2/19
+# Add the ability to load save games
+# Test the housing features in a seperate unit test.
+# Add more features.
+
 class Game:
     def __init__(self):
+        self.check_for_save_folder()
+        self.starting_dir = os.getcwd() 
         self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
         self.civ_species = ''  # Holds the name of species
         self.wood_increment_amt = 100
-        house1 = SingleHouse(1)
-        self.houses = [house1]
+        # house1 = SingleHouse(1)
+        self.houses = []
         self.occupant_names = [] 
         self.wood_amt = 0
         self.stone_amt = 0
@@ -34,6 +41,54 @@ class Game:
         for name in content:
             self.occupant_names.append(name)
 
+    def save_game_prompt(self, parent_window):
+        # Displays what the user will see when they are wanting to save their game.
+        parent_window.withdraw()
+        save_prompt_window = tk.Toplevel()
+        save_prompt_window.title('Save Game')
+        save_prompt_window.resizable(width=False, height=False)
+        save_prompt_window.protocol('WM_DELETE_WINDOW', lambda: self.back(save_prompt_window, parent_window))
+        save_name_entry_label = tk.Label(save_prompt_window, text='Save Name:')
+        save_name_entry_label.grid(row=0)
+        save_name_entry = tk.Entry(save_prompt_window)
+        save_name_entry.grid(row=0, column=1)
+        save_game_button = tk.Button(save_prompt_window, text='Save Game')
+        save_game_button.grid(row=1, column=1)
+        back_button = tk.Button(save_prompt_window, text='Back', command=lambda:self.back(save_prompt_window, parent_window))
+        back_button.grid(row=2, column=1)
+
+    def save_game_backend(self, save_name):
+        # Saves the player's progress into a file.
+        # That file name is called whatever is passed as an argument
+        save_name = '.' + save_name 
+        os.chdir('.saves')
+        if save_name in os.listdir():
+            overwrite_save_prompt = messagebox.askyesno('Overwrite Save?', 'A file already exists called {}'.format(save_name))
+            if overwrite_save_prompt is True:
+                with open(save_name, 'w') as doc:
+                    doc.write('MONEY:{} \n'.format(self.money_amt))
+                    doc.write('WOOD:{} \n'.format(self.wood_amt))
+                    doc.write('STONE:{} \n'.format(self.stone_amt))
+                    doc.write('ADVERTISING:{} \n'.format(self.advertising_level))
+                    doc.write('WOOD_INCREMENT:{} \n'.format(self.wood_increment_amt))
+                    doc.write('YEAR:{}'.format(self.year))
+                messagebox.showinfo('Progress Saved!', 'Your progress has been saved!')
+                os.chdir(self.starting_dir)
+
+            else:
+                messagebox.showinfo('Save Canceled', 'You chose not to overwrite your save!')
+                os.chdir(self.starting_dir)
+        else:
+            with open(save_name, 'w') as doc:
+                doc.write('MONEY:{} \n'.format(self.money_amt))
+                doc.write('WOOD:{} \n'.format(self.wood_amt))
+                doc.write('STONE:{} \n'.format(self.stone_amt))
+                doc.write('ADVERTISING:{} \n'.format(self.advertising_level))
+                doc.writE('WOOD_INCREMENT:{} \n'.format(self.wood_increment_amt))
+                doc.write('YEAR:{}'.format(self.year))
+            messagebox.showinfo('Progress Saved!', 'Your Progress Has Been Saved!')
+            os.chdir(self.starting_dir)
+
     def main_game(self, root_window):
         root_window.withdraw()
         main_window = tk.Toplevel()
@@ -50,8 +105,7 @@ class Game:
         self.display_buttons(main_window, current_wood_amt_display, current_money_amt_display)
 
     def display_buttons(self, window, wood_label_var, money_label_var):
-        # upgrade_advertising_desc = 'Upgrade advertising level to {}! This attracts more people!'.format(
-            # self.advertising_level+1)
+        # This displays all the buttons to a window that is passed as an argument.
         harvest_wood_desc = 'Harvest Wood - Takes 2 hours - Gives 100 wood!'
         sell_wood_desc = 'Sell Wood - 2 dollars per wood piece!'
         start_advertising_desc = 'Start Advertising - Attracts more people to your town! - Costs 600 dollars!'
@@ -59,19 +113,21 @@ class Game:
             self.single_house_amt)
         build_medium_house_desc = 'Build a medium home that holds up to 4 people! Costs {} wood'.format(
             self.medium_house_amt)
+        save_game_button = tk.Button(window, text='Save Progress', command=lambda:self.save_game_prompt(window))
+        save_game_button.grid(row=3)
         harvest_wood_button = tk.Button(window, text=harvest_wood_desc,
                                         command=lambda: self.add_wood(self.wood_increment_amt,  wood_label_var))
-        harvest_wood_button.grid(row=3)
+        harvest_wood_button.grid(row=4)
         sell_wood_button = tk.Button(window, text=sell_wood_desc, command=lambda: self.sell_wood(wood_label_var,
                                                                                                  money_label_var))
-        sell_wood_button.grid(row=4)
+        sell_wood_button.grid(row=5)
         build_single_house_desc = tk.Button(window, text=build_single_house_desc)
-        build_single_house_desc.grid(row=5)
+        build_single_house_desc.grid(row=6)
         build_medium_house_desc = tk.Button(window, text=build_medium_house_desc)
-        build_medium_house_desc.grid(row=6)
+        build_medium_house_desc.grid(row=7)
         upgrade_advertising_button = tk.Button(window, text=start_advertising_desc,
                                                command=lambda: self.advertising_start(600))
-        upgrade_advertising_button.grid(row=7)
+        upgrade_advertising_button.grid(row=8)
 
     def advertising_start(self, amount_needed_to_upgrade):  # Creates a new thread and runs it.
         if self.money_amt >= amount_needed_to_upgrade:
@@ -131,7 +187,7 @@ class Game:
         starting_window.resizable(width=False, height=False)
         start_new_game = tk.Button(text='New Game', command=lambda: self.new_game_window(starting_window))
         start_new_game.grid(row=0)
-        load_game = tk.Button(text='Load Game')
+        load_game = tk.Button(text='Load Game', command=lambda: self.load_game_window(starting_window))
         load_game.grid(row=1)
         quit_button = tk.Button(text='Quit', command=lambda: self.quit(starting_window))
         quit_button.grid(row=2)
@@ -228,8 +284,27 @@ class Game:
         window_to_close.destroy()
         window_to_open.deiconify()
 
-    def load_game(self):  # Reads from a file called ".playernamexample> in .saves and loads the player's progress.
-        pass
+    def load_game_window(self, parent_window):  # Reads from a file called ".playernamexample> in .saves and loads the player's progress.
+        parent_window.withdraw()
+        load_game_prompt = tk.Toplevel()
+        load_game_prompt.resizable(width=False, height=False)
+        load_game_prompt.protocol('WM_DELETE_WINDOW', lambda: self.back(load_game_prompt, parent_window))
+        self.display_available_saves(load_game_prompt, parent_window)
+
+    def display_available_saves(self, window_to_display_to, parent_window):
+        #parent_window in this case would be the window from the starting_win function
+        os.chdir('.saves')
+        items = os.listdir()
+        row_count = -1 
+        if len(items) == 0:
+            messagebox.showinfo('No Saves!', 'You have no savegames!')
+            os.chdir(self.starting_dir)
+            self.back(window_to_display_to, parent_window)       
+        else:
+            for save_file_name in os.listdir():
+                row_count += 1 
+                tk.Button(window_to_display_to, text=save_file_name, command=lambda save_name=save_file_name:print(save_name)).grid(row=row_count)
+                
 
     def quit(self, window):  # Destroys the main root window and closes the program.
         window.destroy()
