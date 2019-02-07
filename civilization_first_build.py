@@ -7,10 +7,14 @@ from time import sleep
 import random
 
 
-#TODO LIST 4/2/19
+#TODO LIST 7/2/19
 # Add the ability to load save games
 # Test the housing features in a seperate unit test.
 # Add more features.
+# Continue working on displays all building related options.
+# Continue working on displaying all financial related options.
+# Bug test GUI and streamline.
+# Work on backend for every feature and test extensively.
 
 class Game:
     def __init__(self):
@@ -18,13 +22,18 @@ class Game:
         self.starting_dir = os.getcwd() 
         self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
         self.civ_species = ''  # Holds the name of species
-        self.wood_increment_amt = 100
+        self.wood_increment_amt = 10
         # house1 = SingleHouse(1)
         self.houses = []
+        self.total_amount_of_buildings = 0
+        self.amount_of_houses = 0
+        self.amount_of_workplaces = 0 
         self.occupant_names = [] 
         self.wood_amt = 0
         self.stone_amt = 0
         self.current_population = 0
+        self.workplace_stone_amt = 500
+        self.money_workplace_amt = 1200
         self.single_house_amt = 100
         self.medium_house_amt = 300
         self.money_amt = 0
@@ -104,15 +113,57 @@ class Game:
         current_stone_amt_display.grid(row=2)
         self.display_buttons(main_window, current_wood_amt_display, current_money_amt_display)
 
+    def display_building_options(self, window):
+        # This functions displays all the building related options to the user.
+        window.withdraw()
+        build_single_house_desc = 'Build a single small home that holds 1 person! Costs {} wood'.format(
+            self.single_house_amt)
+        build_medium_house_desc = 'Build a medium home that holds up to 4 people! Costs {} wood'.format(
+            self.medium_house_amt)
+        build_workplace_desc = 'Register new business! - Costs {} dollars and {} stone'.format(
+            self.workplace_stone_amt, self.money_workplace_amt)
+        building_options_window = tk.Toplevel()
+        building_options_window.title('Building Options')
+        building_options_window.resizable(width=False, height=False)
+        amount_of_total_buildings_desc = 'Total Buildings Count:{}'.format(self.total_amount_of_buildings)
+        amount_of_homes_desc = 'Total Homes Count:{}'.format(self.amount_of_houses)
+        amount_of_total_buildings_label = tk.Label(building_options_window, text=amount_of_total_buildings_desc)
+        amount_of_total_buildings_label.grid(row=0)
+        amount_of_homes_label = tk.Label(building_options_window, text=amount_of_homes_desc)
+        amount_of_homes_label.grid(row=1)
+        build_single_house_button = tk.Button(building_options_window, text=build_single_house_desc)
+        build_single_house_button.grid(row=3)
+        build_medium_house_button = tk.Button(building_options_window, text=build_medium_house_desc)
+        build_medium_house_button.grid(row=4)
+        build_workplace_button = tk.Button(building_options_window, text=build_workplace_desc)
+        build_workplace_button.grid(row=5)
+
     def display_buttons(self, window, wood_label_var, money_label_var):
         # This displays all the buttons to a window that is passed as an argument.
-        harvest_wood_desc = 'Harvest Wood - Takes 2 hours - Gives 100 wood!'
+        harvest_wood_desc = 'Harvest Wood - Takes 2 hours - Gives {} wood!'.format(self.wood_increment_amt)
         sell_wood_desc = 'Sell Wood - 2 dollars per wood piece!'
+        building_options_desc = 'Building Options'
+        financial_options = 'Financial Related Options'
+        harvest_wood_button = tk.Button(window, text=harvest_wood_desc,
+                                        command=lambda:self.add_wood(self.wood_increment_amt, wood_label_var))
+        harvest_wood_button.grid(row=3)
+        sell_wood_button = tk.Button(window, text=sell_wood_desc,
+                                    command=lambda: self.sell_wood(wood_label_var,
+                                                                    money_label_var))
+        sell_wood_button.grid(row=4)
+        building_options_button = tk.Button(window, text=building_options_desc,
+                                            command=lambda: self.display_building_options(window))
+        building_options_button.grid(row=5)
+        financial_options_button = tk.Button(window, text=financial_options)
+        financial_options_button.grid(row=6)
+        '''
         start_advertising_desc = 'Start Advertising - Attracts more people to your town! - Costs 600 dollars!'
         build_single_house_desc = 'Build a single small home that holds 1 person! Costs {} wood'.format(
             self.single_house_amt)
         build_medium_house_desc = 'Build a medium home that holds up to 4 people! Costs {} wood'.format(
             self.medium_house_amt)
+        build_workplace_desc = 'Register new business! - Costs {} dollars and {} stone'.format(
+            self.workplace_stone_amt, self.money_workplace_amt)
         save_game_button = tk.Button(window, text='Save Progress', command=lambda:self.save_game_prompt(window))
         save_game_button.grid(row=3)
         harvest_wood_button = tk.Button(window, text=harvest_wood_desc,
@@ -128,6 +179,23 @@ class Game:
         upgrade_advertising_button = tk.Button(window, text=start_advertising_desc,
                                                command=lambda: self.advertising_start(600))
         upgrade_advertising_button.grid(row=8)
+        make_new_business_button = tk.Button(window, text=build_workplace_desc, command=lambda:self.register_new_business_window(window))
+        make_new_business_button.grid(row=9)
+        '''    
+
+    def register_new_business_window(self, previous_window):
+        previous_window.withdraw()
+        make_new_business_window = tk.Toplevel()
+        make_new_business_window.title('New Business')
+        make_new_business.resizable(width=False, height=False)
+        company_name_entry_label = tk.Label(make_new_business_window, text='Business Name:')
+        company_name_entry_label.grid(row=0)
+        company_name_entry = tk.Entry()
+        company_name_entry.grid(row=0, column=1)
+        employee_limit_entry_label = tk.Labe(make_new_business_window, text='Employee Limit:')
+        employee_limit_entry_label.grid(row=1)
+        employee_limit_entry = tk.Entry(make_new_business_window)
+        employee_limit_entry.grid(row=1, column=1)
 
     def advertising_start(self, amount_needed_to_upgrade):  # Creates a new thread and runs it.
         if self.money_amt >= amount_needed_to_upgrade:
@@ -318,6 +386,29 @@ class Game:
         else:
             os.mkdir('.saves')
 
+
+class WorkPlace:
+    def __init__(self, workplace_type):
+        self.workplace_employee_limit = 15
+        self.full = False 
+        self.workplace_type = workplace_type
+        self.number_of_workers = 0
+        self.list_of_workers_names = []
+
+    def add_new_worker(self, worker_name):
+        if self.number_of_workers < self.workplace_employee_limit:
+            self.list_of_workers_names.append(worker_name)
+            self.number_of_workers += 1
+        else:
+            print('Workplace full!')
+            self.full = True 
+
+    def remove_worker(self, worker_name):
+        self.list_of_workers_names.remove(worker_name)
+        self.number_of_workers -= 1 
+
+    def get_workers(self):
+        return self.list_of_workers_names
 
 class SingleHouse:
     def __init__(self, inhabitant_amount): # Inhabitant amount should return a
