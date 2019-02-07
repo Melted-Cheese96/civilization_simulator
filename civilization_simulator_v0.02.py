@@ -20,29 +20,29 @@ import random
 
 class Game:
     def __init__(self):
-        self.check_for_save_folder()
-        self.starting_dir = os.getcwd()
+        self.check_for_save_folder() # Check if '.saves' is in current directory.
+        self.starting_dir = os.getcwd() # Directory which script was started in.
         self.civ_name = ''  # This variable contains the name of the civilization that the player has chosen
         self.civ_species = ''  # Holds the name of species
-        self.wood_increment_amt = 10
+        self.wood_increment_amt = 10 # How much wood to give the player each time they harvest.
         # house1 = SingleHouse(1)
-        self.houses = []
-        self.total_amount_of_buildings = 0
-        self.amount_of_houses = 0
-        self.amount_of_workplaces = 0
-        self.occupant_names = []
-        self.wood_amt = 0
-        self.stone_amt = 0
-        self.current_population = 0
-        self.workplace_stone_amt = 500
-        self.money_workplace_amt = 1200
-        self.single_house_amt = 100
-        self.medium_house_amt = 300
-        self.money_amt = 0
+        self.houses = [] # Keeps track of the created house objects
+        self.total_amount_of_buildings = 0 # Counter for thet total amount of buildings built in town.
+        self.amount_of_houses = 0 # Counter for the number of homes built
+        self.amount_of_workplaces = 0 # Counter for the number of workplaces.
+        self.occupant_names = [] # Stores the names of occupants that are in the town.
+        self.wood_amt = 0 # Displays amount of wood the player has.
+        self.stone_amt = 0 # Displays amount of stone the player has.
+        self.current_population = 0 # Displays current population of town.
+        self.workplace_stone_amt = 500 # The amount of stone needed to build a workplace.
+        self.money_workplace_amt = 1200 # The amount needed to build a workplace.
+        self.single_house_amt = 100 # The amount needed to build a small sized house.
+        self.medium_house_amt = 300 # The amount needed to build a medium sized house.
+        self.money_amt = 650 # Stores the amount of money the player has in total.
         self.advertising_level = 0
-        self.advertising_money_price = 600
-        self.neighborhood_count = 0
-        self.minimum_year = 1432  # self.year cannot be lower than this
+        self.advertising_money_price = 600 # Amount needed to upgrade advertising.
+        self.neighborhood_count = 0 # Amount of neighborhood districts in the town.
+        self.minimum_year = 1432  # self.year cannot be lower than this.
         self.year = 0000  # Variable for what year the player is in.
         self.country = ''  # Country where civilization is based in
         self.starting_window()
@@ -120,8 +120,10 @@ class Game:
         current_wood_amt_display.grid(row=1)
         current_stone_amt_display = tk.Label(main_window, text='Stone:{}'.format(self.stone_amt))
         current_stone_amt_display.grid(row=2)
-
-        self.display_buttons(main_window, current_wood_amt_display, current_money_amt_display, root_window)
+        population_label = tk.Label(main_window, text='Population:{}'.format(self.current_population))
+        population_label.grid(row=3)
+        self.display_buttons(main_window, current_wood_amt_display, current_money_amt_display, root_window,
+                             population_label)
 
     def display_building_options(self, window):
         # This functions displays all the building related options to the user.
@@ -148,15 +150,17 @@ class Game:
         build_workplace_button = tk.Button(building_options_window, text=build_workplace_desc)
         build_workplace_button.grid(row=5)
 
-    def display_financial_options(self, previous_window):
+    def display_financial_options(self, previous_window, population_label):
         financial_options_window = tk.Toplevel()
         financial_options_window.title('Financial Options')
         financial_options_window.resizable(width=False, height=False)
-        upgrade_advertising_desc = 'Upgrade town advertising - Costs {} dollars'.format(self.advertising_money_price)
-        upgrade_advertising_button = tk.Button(financial_options_window, text=upgrade_advertising_desc)
+        upgrade_advertising_desc = 'Upgrade town advertising. Attracts more people to your town! - Costs {} dollars'.\
+            format(self.advertising_money_price)
+        upgrade_advertising_button = tk.Button(financial_options_window, text=upgrade_advertising_desc,
+                                               command=lambda:self.advertising_init(population_label))
         upgrade_advertising_button.grid(row=0)
 
-    def display_buttons(self, window, wood_label_var, money_label_var, root):
+    def display_buttons(self, window, wood_label_var, money_label_var, root, population_label):
         # This displays all the buttons to a window that is passed as an argument.
         harvest_wood_desc = 'Harvest Wood - Takes 2 hours - Gives {} wood!'.format(self.wood_increment_amt)
         sell_wood_desc = 'Sell Wood - 2 dollars per wood piece!'
@@ -164,24 +168,30 @@ class Game:
         financial_options = 'Financial Related Options'
         harvest_wood_button = tk.Button(window, text=harvest_wood_desc,
                                         command=lambda: self.add_wood(self.wood_increment_amt, wood_label_var))
-        harvest_wood_button.grid(row=3)
+        harvest_wood_button.grid(row=4)
         sell_wood_button = tk.Button(window, text=sell_wood_desc,
                                      command=lambda: self.sell_wood(wood_label_var,
                                                                     money_label_var))
-        sell_wood_button.grid(row=4)
+        sell_wood_button.grid(row=5)
         building_options_button = tk.Button(window, text=building_options_desc,
                                             command=lambda: self.display_building_options(window))
-        building_options_button.grid(row=5)
+        building_options_button.grid(row=6)
         financial_options_button = tk.Button(window, text=financial_options,
-                                             command=lambda:self.display_financial_options(window))
-        financial_options_button.grid(row=6)
-        # save_button = tk.Button(window, text='Save Progress', command=lambda:self.save_game_prompt())
-        # save_button.grid(row=7)
-        # back_button = tk.Button(window, text='Return to main menu',
-                                # command=lambda:self.return_player_to_main_menu(window, root))
-        # back_button.grid(row=8)
+                                             command=lambda:self.display_financial_options(window, population_label))
+        financial_options_button.grid(row=7)
+
+    def advertising_init(self, population_label):
+        if self.money_amt >= self.advertising_money_price:
+            self.money_amt -= self.advertising_money_price
+            print(self.money_amt)
+        else:
+            messagebox.showerror('Not Enough Money!', 'You do not have enough money!')
+
+    def increment_population_amount(self):
+        pass 
 
     def return_player_to_main_menu(self, window_to_close, root_window):
+        # Returns player to title screen
         save_prompt = messagebox.askyesno('Save?', 'Do you want to save your current progress?')
         if save_prompt is True:
             self.save_game_prompt()
@@ -203,38 +213,6 @@ class Game:
         employee_limit_entry_label.grid(row=1)
         employee_limit_entry = tk.Entry(make_new_business_window)
         employee_limit_entry.grid(row=1, column=1)
-
-    def advertising_start(self, amount_needed_to_upgrade):  # Creates a new thread and runs it.
-        if self.money_amt >= amount_needed_to_upgrade:
-            self.money_amt -= amount_needed_to_upgrade
-            self.advertising_level += 1
-            start_advertising_thread = threading.Thread(target=self.population_increment)
-            start_advertising_thread.start()
-        else:
-            messagebox.showerror('Not enough money!', 'You do not have enough money! '
-                                                      'You need {} dollars'.format(amount_needed_to_upgrade))
-
-    def population_increment(self):
-        '''
-        This is the "advertising" upgrade. All this does it increment self.population by a random amount every few
-        seconds. Then another function is going to check if all those new people can get homes, if so. It adds
-        +1 to the self.population variable.
-        '''
-
-        while True:
-            if self.advertising_level == 1:
-                number_of_new_people = random.randint(1, 20)
-                print(number_of_new_people)
-                for item in self.houses:
-                    occupant_names = item.return_occupant_names()
-                    print(occupant_names)
-                    occupant_amount = item.inhabitant_amount
-                    number_of_new_people -= occupant_amount
-                    house_value = item.check_if_residence_is_full()
-                    if house_value is True:
-                        item.add_occupant(random.choice(self.occupant_names))
-                    else:
-                        print('House full!')
 
     def sell_wood(self, wood_amt_display, money_amt_display):
         # This functions sells all the wood the player has in their inventory
